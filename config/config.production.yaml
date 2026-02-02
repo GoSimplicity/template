@@ -1,0 +1,34 @@
+env: online
+
+server:
+  port: 8080
+
+db:
+  driver: mysql
+  host: localhost
+  port: 3306
+  database: go_project_template
+  username: root
+  password: 123456
+  max_idle_conns: 10
+  max_open_conns: 100
+
+redis:
+  host: localhost
+  port: 6379
+  password: 123456
+
+
+kafka:
+  addrs:
+    - localhost:9092
+
+log:
+  level: info
+  path: "logs"
+  maxSize: 10
+  maxBackups: 30
+  maxAge: 7
+  compress: true
+  localTime: true
+  console: false
