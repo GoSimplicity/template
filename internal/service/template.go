@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"go_project_template/internal/domain"
-	"go_project_template/internal/repository"
+	"github.com/GoSimplicity/template/internal/domain"
+	"github.com/GoSimplicity/template/internal/repository"
 )
 
 type TemplateService interface {

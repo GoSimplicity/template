@@ -1,7 +1,7 @@
 package ioc
 
 import (
-	"go_project_template/internal/event"
+	"github.com/GoSimplicity/template/internal/event"
 
 	"github.com/IBM/sarama"
 	"github.com/spf13/viper"

@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"go_project_template/internal/service"
+	"github.com/GoSimplicity/template/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

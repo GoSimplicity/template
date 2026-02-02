@@ -4,11 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go_project_template/internal/repository"
+	"github.com/GoSimplicity/template/internal/repository"
 	"time"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
+)
+
+const (
+	GroupTemplateDLQ  = "template_dlq"
+	DLQProcessTimeout = 10 * time.Second
+	DLQMaxRetries     = 5
+	DLQBaseWaitTime   = 5 * time.Second
 )
 
 type PublishDeadLetterConsumer struct {
@@ -30,13 +37,20 @@ func NewPublishDeadLetterConsumer(
 }
 
 func (p *PublishDeadLetterConsumer) Start(ctx context.Context) error {
-	cg, err := sarama.NewConsumerGroupFromClient("template_dlq", p.client)
+	cg, err := sarama.NewConsumerGroupFromClient(GroupTemplateDLQ, p.client)
 	if err != nil {
 		p.logger.Error("创建死信队列消费者组失败", zap.Error(err))
 		return err
 	}
 
 	p.logger.Info("DeadLetterConsumer 开始消费死信队列")
+
+	// 监听消费者组错误，避免吞掉底层错误信息
+	go func() {
+		for err := range cg.Errors() {
+			p.logger.Error("死信队列消费者组错误", zap.Error(err))
+		}
+	}()
 
 	// 启动死信队列消息消费
 	go func() {
@@ -49,7 +63,7 @@ func (p *PublishDeadLetterConsumer) Start(ctx context.Context) error {
 			default:
 				if err := cg.Consume(ctx, []string{TopicDeadLetter}, &dlqConsumerGroupHandler{consumer: p}); err != nil {
 					p.logger.Error("死信队列消费循环出错", zap.Error(err))
-					continue
+					time.Sleep(500 * time.Millisecond)
 				}
 			}
 		}
@@ -66,28 +80,27 @@ func (h *dlqConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   {
 func (h *dlqConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 
 func (h *dlqConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	const (
-		maxRetries   = 5
-		baseWaitTime = 5 * time.Second
-	)
-
 	for msg := range claim.Messages() {
 		var err error
-		for i := 0; i < maxRetries; i++ {
+		for i := 0; i < DLQMaxRetries; i++ {
 			if err = h.consumer.processDLQMessage(msg); err == nil {
 				break
 			}
 
-			if i < maxRetries-1 { // 最后一次失败不需要记录重试日志
+			if i < DLQMaxRetries-1 { // 最后一次失败不需要记录重试日志
 				h.consumer.logger.Error("处理死信消息失败,准备重试",
 					zap.Error(err),
 					zap.Int("重试次数", i+1),
-					zap.Int("剩余重试次数", maxRetries-i-1),
+					zap.Int("剩余重试次数", DLQMaxRetries-i-1),
 					zap.ByteString("message", msg.Value))
 
 				// 指数退避策略,等待时间随重试次数指数增长
-				waitTime := baseWaitTime * time.Duration(1<<uint(i))
-				time.Sleep(waitTime)
+				waitTime := DLQBaseWaitTime * time.Duration(1<<uint(i))
+				select {
+				case <-time.After(waitTime):
+				case <-sess.Context().Done():
+					return sess.Context().Err()
+				}
 			}
 		}
 
@@ -126,7 +139,7 @@ func (p *PublishDeadLetterConsumer) processDLQMessage(msg *sarama.ConsumerMessag
 		zap.String("original_topic", originalTopic),
 		zap.ByteString("message", msg.Value))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), DLQProcessTimeout)
 	defer cancel()
 
 	// 重新处理消息

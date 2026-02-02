@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"go_project_template/internal/domain"
-	"go_project_template/internal/repository/dao"
+	"github.com/GoSimplicity/template/internal/domain"
+	"github.com/GoSimplicity/template/internal/repository/dao"
 
 	"go.uber.org/zap"
 )

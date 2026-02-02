@@ -2,7 +2,7 @@ package domain
 
 import (
 	"fmt"
-	"go_project_template/internal/errs"
+	"github.com/GoSimplicity/template/internal/errs"
 )
 
 type Template struct {
