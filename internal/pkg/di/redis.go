@@ -2,6 +2,7 @@ package di
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -10,20 +11,19 @@ import (
 type RedisConfig struct {
 	Host     string
 	Password string
-	DB       int
+	Port     int
 }
 
 func InitRedis() *redis.Client {
 	cfg := &RedisConfig{
 		Host:     viper.GetString("redis.host"),
 		Password: viper.GetString("redis.password"),
-		DB:       viper.GetInt("redis.db"),
+		Port:     viper.GetInt("redis.port"),
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     cfg.Host,
+		Addr:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Password: cfg.Password,
-		DB:       cfg.DB,
 	})
 	if err := redisClient.Ping(context.Background()).Err(); err != nil {
 		panic("failed to connect to redis: " + err.Error())

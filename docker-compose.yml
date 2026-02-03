@@ -1,0 +1,68 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "33306:3306"
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: v6SxhWHyZC7S
+      MYSQL_DATABASE: go_project_template
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    privileged: true
+    restart: always
+    networks:
+      - go_project_template_net
+
+  redis:
+    image: redislabs/rebloom:latest
+    command: redis-server --notify-keyspace-events AKE --loadmodule /usr/lib/redis/modules/redisbloom.so
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '36379:6379'
+    networks:
+      - go_project_template_net
+
+  kafka:
+    image: bitnamilegacy/kafka:3.9.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_KRAFT_CLUSTER_ID=LlMmNnOoPp
+      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
+    volumes:
+      - ./data/kafka/data:/bitnami/kafka/data:rw
+    networks:
+      - go_project_template_net
+
+networks:
+  go_project_template_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
