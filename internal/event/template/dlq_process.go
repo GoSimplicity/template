@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/GoSimplicity/template/internal/repository"
-
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 )
@@ -20,18 +18,15 @@ const (
 )
 
 type TemplateDeadLetterConsumer struct {
-	repo   repository.TemplateRepository
 	client sarama.Client
 	logger *zap.Logger
 }
 
 func NewTemplateDeadLetterConsumer(
-	repo repository.TemplateRepository,
 	client sarama.Client,
 	logger *zap.Logger,
 ) *TemplateDeadLetterConsumer {
 	return &TemplateDeadLetterConsumer{
-		repo:   repo,
 		client: client,
 		logger: logger,
 	}

@@ -3,6 +3,7 @@ package di
 import (
 	"github.com/GoSimplicity/template/internal/event"
 
+	templateEvent "github.com/GoSimplicity/template/internal/event/template"
 	"github.com/IBM/sarama"
 	"github.com/spf13/viper"
 )
@@ -48,7 +49,9 @@ func InitSyncProducer(c sarama.Client) sarama.SyncProducer {
 }
 
 // InitConsumers 初始化并返回一个事件消费者
-func InitConsumers() []event.Consumer {
+func InitConsumers(templateEventConsumer *templateEvent.TemplateEventConsumer) []event.Consumer {
 	// 返回消费者切片
-	return []event.Consumer{}
+	return []event.Consumer{
+		templateEventConsumer,
+	}
 }

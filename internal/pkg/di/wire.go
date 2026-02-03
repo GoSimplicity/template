@@ -30,7 +30,6 @@ func InitializeApp() *Cmd {
 		cache.NewTemplateCache,
 		eventTemplate.NewTemplateSaramaSyncProducer,
 		eventTemplate.NewTemplateEventConsumer,
-		eventTemplate.NewTemplateDeadLetterConsumer,
 		wire.Struct(new(Cmd), "*"),
 	)
 	return new(Cmd)

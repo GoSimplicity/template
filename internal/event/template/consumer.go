@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/GoSimplicity/template/internal/repository"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -18,7 +17,6 @@ const (
 )
 
 type TemplateEventConsumer struct {
-	repo    repository.TemplateRepository
 	client  sarama.Client
 	logger  *zap.Logger
 	dlqProd sarama.SyncProducer // 死信队列生产者
@@ -28,9 +26,8 @@ type consumerGroupHandler struct {
 	consumer *TemplateEventConsumer
 }
 
-func NewTemplateEventConsumer(repo repository.TemplateRepository, client sarama.Client, dlqProd sarama.SyncProducer, logger *zap.Logger) *TemplateEventConsumer {
+func NewTemplateEventConsumer(client sarama.Client, dlqProd sarama.SyncProducer, logger *zap.Logger) *TemplateEventConsumer {
 	return &TemplateEventConsumer{
-		repo:    repo,
 		client:  client,
 		logger:  logger,
 		dlqProd: dlqProd,
