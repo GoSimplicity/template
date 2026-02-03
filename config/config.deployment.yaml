@@ -2,6 +2,7 @@ env: dev
 
 server:
   port: 8080
+  mode: debug
 
 db:
   driver: mysql
