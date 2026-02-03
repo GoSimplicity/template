@@ -17,19 +17,19 @@ type TemplateEvent struct {
 	TemplateId int64 `json:"template_id"`
 }
 
-type SaramaSyncProducer struct {
+type TemplateSaramaSyncProducer struct {
 	producer sarama.SyncProducer
 	logger   *zap.Logger
 }
 
-func NewSaramaSyncProducer(producer sarama.SyncProducer, logger *zap.Logger) Producer {
-	return &SaramaSyncProducer{
+func NewTemplateSaramaSyncProducer(producer sarama.SyncProducer, logger *zap.Logger) Producer {
+	return &TemplateSaramaSyncProducer{
 		producer: producer,
 		logger:   logger,
 	}
 }
 
-func (s *SaramaSyncProducer) ProduceTemplateEvent(evt TemplateEvent) error {
+func (s *TemplateSaramaSyncProducer) ProduceTemplateEvent(evt TemplateEvent) error {
 	val, err := json.Marshal(evt)
 	if err != nil {
 		s.logger.Error("Failed to marshal template event", zap.Error(err))

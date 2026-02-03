@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/GoSimplicity/template/internal/repository"
 	"time"
+
+	"github.com/GoSimplicity/template/internal/repository"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
@@ -18,25 +19,25 @@ const (
 	DLQBaseWaitTime   = 5 * time.Second
 )
 
-type PublishDeadLetterConsumer struct {
+type TemplateDeadLetterConsumer struct {
 	repo   repository.TemplateRepository
 	client sarama.Client
 	logger *zap.Logger
 }
 
-func NewPublishDeadLetterConsumer(
+func NewTemplateDeadLetterConsumer(
 	repo repository.TemplateRepository,
 	client sarama.Client,
 	logger *zap.Logger,
-) *PublishDeadLetterConsumer {
-	return &PublishDeadLetterConsumer{
+) *TemplateDeadLetterConsumer {
+	return &TemplateDeadLetterConsumer{
 		repo:   repo,
 		client: client,
 		logger: logger,
 	}
 }
 
-func (p *PublishDeadLetterConsumer) Start(ctx context.Context) error {
+func (p *TemplateDeadLetterConsumer) Start(ctx context.Context) error {
 	cg, err := sarama.NewConsumerGroupFromClient(GroupTemplateDLQ, p.client)
 	if err != nil {
 		p.logger.Error("创建死信队列消费者组失败", zap.Error(err))
@@ -73,7 +74,7 @@ func (p *PublishDeadLetterConsumer) Start(ctx context.Context) error {
 }
 
 type dlqConsumerGroupHandler struct {
-	consumer *PublishDeadLetterConsumer
+	consumer *TemplateDeadLetterConsumer
 }
 
 func (h *dlqConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
@@ -119,7 +120,7 @@ func (h *dlqConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession,
 }
 
 // processDLQMessage 处理死信队列中的消息
-func (p *PublishDeadLetterConsumer) processDLQMessage(msg *sarama.ConsumerMessage) error {
+func (p *TemplateDeadLetterConsumer) processDLQMessage(msg *sarama.ConsumerMessage) error {
 	var evt TemplateEvent
 
 	if err := json.Unmarshal(msg.Value, &evt); err != nil {
@@ -152,7 +153,7 @@ func (p *PublishDeadLetterConsumer) processDLQMessage(msg *sarama.ConsumerMessag
 }
 
 // handleDeadLetterMessage 处理死信消息的具体业务逻辑
-func (p *PublishDeadLetterConsumer) handleDeadLetterMessage(ctx context.Context, evt *TemplateEvent) error {
+func (p *TemplateDeadLetterConsumer) handleDeadLetterMessage(ctx context.Context, evt *TemplateEvent) error {
 	// ...
 	p.logger.Info("成功处理死信消息", zap.Int64("template_id", evt.TemplateId))
 	return nil

@@ -1,4 +1,4 @@
-package ioc
+package di
 
 import (
 	"os"
